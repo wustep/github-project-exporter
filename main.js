@@ -1,5 +1,7 @@
 const { default: axios } = require("axios");
 const prompt = require("prompt");
+const Papa = require("papaparse");
+const fs = require("fs");
 
 require("dotenv").config();
 
@@ -10,6 +12,11 @@ const API_USER_OWNER_PROJECTS_URL = (orgOwner) =>
   `${API_URL}/users/${orgOwner}/projects`;
 const API_ORG_OWNER_PROJECTS_URL = (userOwner) =>
   `${API_URL}/orgs/${userOwner}/projects`;
+const API_PROJECT_COLUMNS_URL = (projectId) =>
+  `${API_URL}/projects/${projectId}/columns`;
+const API_COLUMN_CARDS_URL = (columnId) =>
+  `${API_URL}/projects/columns/${columnId}/cards`;
+const API_CARD_URL = (cardId) => `${API_URL}/projects/columns/cards/${cardId}`;
 
 (async () => {
   try {
@@ -68,23 +75,26 @@ const API_ORG_OWNER_PROJECTS_URL = (userOwner) =>
       ? API_USER_OWNER_PROJECTS_URL(owner)
       : API_ORG_OWNER_PROJECTS_URL(owner);
 
-    const projects = await axios.get(projectsEndpoint, {
-      headers,
-    });
+    const projects = (
+      await axios.get(projectsEndpoint, {
+        headers,
+      })
+    ).data;
 
-    const numProjects = projects?.data?.length ?? 0;
+    const numProjects = projects?.length ?? 0;
 
     if (numProjects === 0) {
       console.log("No projects found!");
       return;
     }
     console.group("Available Projects:");
-    projects.data.forEach((project, index) =>
+    projects.forEach((project, index) =>
       console.log(`[${index}] ${project.name}: ${project.html_url}`)
     );
+    console.groupEnd();
 
     const projectToLookup =
-      projects.data[
+      projects[
         numProjects === 0
           ? projects.data[0]
           : (
@@ -99,8 +109,62 @@ const API_ORG_OWNER_PROJECTS_URL = (userOwner) =>
               })
             ).projectToLookup
       ];
+    const projectId = projectToLookup.id;
 
-    console.log(projectToLookup);
+    const columns = (
+      await axios.get(API_PROJECT_COLUMNS_URL(projectId), {
+        headers,
+      })
+    ).data;
+
+    const exportData = [];
+
+    for (column of columns) {
+      const cards = (
+        await axios.get(API_COLUMN_CARDS_URL(column.id), {
+          headers,
+        })
+      ).data;
+      for (card of cards) {
+        const cardResponse = (
+          await axios.get(API_CARD_URL(card.id), {
+            headers,
+          })
+        ).data;
+
+        exportData.push({
+          column: column.name,
+          note: cardResponse.content_url ?? cardResponse.note,
+        });
+      }
+    }
+
+    const { outputFilename } = await prompt.get({
+      name: "outputFilename",
+      default: "output/export.csv",
+      description: "What file name to export to?",
+      type: "string",
+      required: true,
+    });
+
+    // https://www.papaparse.com/docs#json-to-csv
+    const outputCSV = Papa.unparse(exportData, {
+      // These are all defaults for now! Change as needed.
+      quotes: false,
+      quoteChar: '"',
+      escapeChar: '"',
+      delimiter: ",",
+      header: true,
+      newline: "\r\n",
+      skipEmptyLines: false,
+      columns: null,
+    });
+
+    fs.writeFile(outputFilename, outputCSV, "utf8", () => {
+      console.group(`Printed output to ${outputFilename}`);
+      console.log(outputCSV);
+      console.groupEnd();
+    });
   } catch (err) {
     console.error(err);
   }
