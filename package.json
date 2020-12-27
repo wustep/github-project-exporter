@@ -1,0 +1,16 @@
+{
+  "name": "github-project-to-csv",
+  "version": "0.0.1",
+  "description": "Convert GitHub project cards to .csv files for importing to Notion or other project managers",
+  "main": "main.js",
+  "author": "wustep",
+  "license": "MIT",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "dotenv": "^8.2.0",
+    "prompt": "^1.1.0"
+  }
+}
