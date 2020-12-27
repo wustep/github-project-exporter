@@ -73,27 +73,19 @@ const { GitHubQuery } = require("./github");
     console.log();
     console.groupEnd();
 
-    const projectToLookup =
-      projects[
-        numProjects === 0
-          ? projects.data[0]
-          : (
-              await prompt.get({
-                name: "projectToLookup",
-                default: 0,
-                description: "Which project to export?",
-                minimum: 0,
-                maximum: numProjects - 1,
-                required: true,
-                type: "integer",
-              })
-            ).projectToLookup
-      ];
+    const { projectIndex } = await prompt.get({
+      name: "projectIndex",
+      default: 0,
+      description: "Which project to export?",
+      minimum: 0,
+      maximum: numProjects - 1,
+      required: true,
+      type: "integer",
+    });
 
     process.stdout.write("Getting cards...");
 
-    const projectId = projectToLookup.id;
-
+    const projectId = projects[projectIndex].id;
     const columns = await GitHub.getProjectColumns(projectId);
 
     const exportData = [];
