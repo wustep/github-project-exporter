@@ -98,12 +98,75 @@ const { GitHubQuery } = require("./github");
 
     const exportData = [];
 
+    /**
+     * We use PapaParse for parsing to CSV, which uses the fields of the first object for the CSV headers,
+     * unless we manually specify an array of headers (`columnHeaders`).
+     * Since we might not need to have issue columns, if there's no issue-based cards, we only add them if needed.
+     */
+    let csvHeaders = [];
+    let addedCardHeaders = false;
+    let addedIssueHeaders = false;
+
     for (column of columns) {
       const cards = await GitHub.getColumnCards(column.id);
+      column.numCards = cards.length;
       for (card of cards) {
-        exportData.push({
+        // For a regular note card, `card.note` is the card contents.
+        // For an Issue card, `card.note` is null.
+        let title = card.note;
+
+        // If card is an issue, populate issue fields.
+        let issueFields = {};
+        if (card.content_url?.includes("issues")) {
+          atleastOneIssue = true;
+          const issue = await GitHub.get(card.content_url, {
+            prependAPIURL: false,
+          });
+          title = issue.title;
+          issueFields = {
+            issue_state: issue.state,
+            issue_labels: issue.labels.length
+              ? issue.labels.reduce((labelString, label) => {
+                  return labelString === null
+                    ? label.name
+                    : labelString + ", " + label.name;
+                }, null)
+              : undefined,
+            issue_link: issue.html_url, // This is either the PR request (if exists) or issue
+            issue_body: issue.body,
+            issue_assignees: issue.assignees.length
+              ? issue.assignees.reduce((assigneeString, assignee) => {
+                  return assigneeString === null
+                    ? assignee.login
+                    : assigneeString + ", " + assignee.login;
+                }, null)
+              : undefined,
+            issue_created_at: issue.created_at,
+            issue_updated_at: issue.updated_at,
+            issue_closed_at: issue.closed_at,
+          };
+        }
+
+        const cardFields = {
           column: column.name,
-          note: card.content_url ?? card.note,
+          title: title,
+          creator: card.creator.login,
+          created_at: card.created_at,
+          updated_at: card.updated_at,
+        };
+
+        if (!addedCardHeaders) {
+          addedCardHeaders = true;
+          csvHeaders = csvHeaders.concat(Object.keys(cardFields));
+        }
+        if (!addedIssueHeaders && Object.keys(issueFields).length) {
+          addedIssueHeaders = true;
+          csvHeaders = csvHeaders.concat(Object.keys(issueFields));
+        }
+
+        exportData.push({
+          ...cardFields,
+          ...issueFields,
         });
       }
     }
@@ -121,9 +184,9 @@ const { GitHubQuery } = require("./github");
 
     process.stdout.write("Writing to csv...");
 
-    // https://www.papaparse.com/docs#json-to-csv
     const outputCSV = Papa.unparse(exportData, {
-      // These are all defaults for now! Change as needed.
+      // These are all PapaParse defaults for now! Change as needed.
+      // https://www.papaparse.com/docs#json-to-csv
       quotes: false,
       quoteChar: '"',
       escapeChar: '"',
@@ -131,7 +194,8 @@ const { GitHubQuery } = require("./github");
       header: true,
       newline: "\r\n",
       skipEmptyLines: false,
-      columns: null,
+      // Custom values
+      columns: csvHeaders,
     });
 
     process.stdout.clearLine();
@@ -140,7 +204,9 @@ const { GitHubQuery } = require("./github");
 
     fs.writeFile(outputFilename, outputCSV, "utf8", () => {
       console.group(`Printed output to ${outputFilename}`);
-      console.log(outputCSV);
+      columns.forEach((column) =>
+        console.log(`${column.name}: ${column.numCards}`)
+      );
       console.groupEnd();
       console.log();
     });

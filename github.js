@@ -10,9 +10,9 @@ class GitHubQuery {
     this.isOwnerUser = isOwnerUser;
   }
 
-  _get = async (url) => {
+  get = async (url, { prependAPIURL = true } = {}) => {
     return (
-      await axios.get(url, {
+      await axios.get(prependAPIURL ? `${API_URL}/${url}` : url, {
         headers: {
           Accept: "application/vnd.github.inertia-preview+json",
           Authorization: `token ${this.token}`,
@@ -22,21 +22,19 @@ class GitHubQuery {
   };
 
   getProjects = async () => {
-    return await this._get(
+    return await this.get(
       this.repo.length
-        ? `${API_URL}/repos/${this.owner}/${this.repo}/projects`
-        : `${API_URL}/${this.isOwnerUser ? "users" : "orgs"}/${
-            this.owner
-          }/projects`
+        ? `repos/${this.owner}/${this.repo}/projects`
+        : `${this.isOwnerUser ? "users" : "orgs"}/${this.owner}/projects`
     );
   };
 
   getProjectColumns = async (projectId) => {
-    return await this._get(`${API_URL}/projects/${projectId}/columns`);
+    return await this.get(`projects/${projectId}/columns`);
   };
 
   getColumnCards = async (columnId) => {
-    return await this._get(`${API_URL}/projects/columns/${columnId}/cards`);
+    return await this.get(`projects/columns/${columnId}/cards`);
   };
 }
 
