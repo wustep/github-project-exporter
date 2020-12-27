@@ -20,3 +20,9 @@ CSV output:
 Make sure you have `yarn` and `node` installed! Use `yarn install` in this directory to install dependencies, then `yarn start` to run the script.
 
 Optionally, look at `env.example` and save a file called `.env` that follows the same structure to set up defaults for the script.
+
+## Contributing
+
+Feel free to submit a PR or issues and I'll try to respond within a week!
+
+This script uses the [GitHub API](https://docs.github.com/en/free-pro-team@latest/rest/reference/projects) based on API calls from December 2020.
