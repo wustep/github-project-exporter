@@ -16,12 +16,14 @@ CSV output:
 ![CSV output](photos/csv-excel-output.png)
 
 Imported to notion:
-_Minor processing: I swapped a few columns to be "Multi-Select", added some tag colors, and moved a few columns around._
 ![Imported to notion](photos/notion-import-list.png)
+_Minor processing: I swapped a few columns to be "Multi-Select", added some tag colors, and moved a few columns around._
+
 
 Notion kanba style (Group by "column"):
-_Note that body text from Issues does not convert GitHub HTML to Notion's markdown._
 ![Notion as kanba board](photos/notion-import-kanba.png)
+_Note that body text from Issues does not convert GitHub HTML to Notion's markdown._
+
 
 ## How to use
 
