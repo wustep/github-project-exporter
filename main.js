@@ -211,6 +211,19 @@ const { GitHubQuery } = require("./github");
       console.log();
     });
   } catch (err) {
-    console.error(err);
+    let errorMessage;
+    switch (err.response?.status) {
+      case 404:
+        errorMessage = "[error] The resource you requested was not found!";
+        break;
+      case 401:
+        errorMessage =
+          "[error] You are unauthorized to access that resource!\r\nYou might have an invalid access token or just not have permission to access that project.";
+        break;
+      default:
+        errorMessage = err;
+        break;
+    }
+    console.error(`\r\n\r\n${errorMessage}`);
   }
 })();

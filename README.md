@@ -20,13 +20,3 @@ CSV output:
 Make sure you have `yarn` and `node` installed! Use `yarn install` in this directory to install dependencies, then `yarn start` to run the script.
 
 Optionally, look at `env.example` and save a file called `.env` that follows the same structure to set up defaults for the script.
-
-## Contributing
-
-There's a lot more that can be done here, including:
-
-- Fetching any more fields?
-- More custom settings
-- Better error handling
-
-Feel free to submit PRs!
