@@ -140,8 +140,8 @@ const { GitHubQuery } = require("./github");
         }
 
         const cardFields = {
-          column: column.name,
           title: title,
+          column: column.name,
           creator: card.creator.login,
           created_at: card.created_at,
           updated_at: card.updated_at,
