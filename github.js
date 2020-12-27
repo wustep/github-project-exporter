@@ -38,10 +38,6 @@ class GitHubQuery {
   getColumnCards = async (columnId) => {
     return await this._get(`${API_URL}/projects/columns/${columnId}/cards`);
   };
-
-  getCard = async (cardId) => {
-    return await this._get(`${API_URL}/projects/columns/cards/${cardId}`);
-  };
 }
 
 module.exports = { GitHubQuery };

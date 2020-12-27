@@ -101,10 +101,9 @@ const { GitHubQuery } = require("./github");
     for (column of columns) {
       const cards = await GitHub.getColumnCards(column.id);
       for (card of cards) {
-        const cardResponse = await GitHub.getCard(card.id);
         exportData.push({
           column: column.name,
-          note: cardResponse.content_url ?? cardResponse.note,
+          note: card.content_url ?? card.note,
         });
       }
     }
