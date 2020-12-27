@@ -75,6 +75,8 @@ const API_CARD_URL = (cardId) => `${API_URL}/projects/columns/cards/${cardId}`;
       ? API_USER_OWNER_PROJECTS_URL(owner)
       : API_ORG_OWNER_PROJECTS_URL(owner);
 
+    process.stdout.write("Getting projects...");
+
     const projects = (
       await axios.get(projectsEndpoint, {
         headers,
@@ -83,14 +85,18 @@ const API_CARD_URL = (cardId) => `${API_URL}/projects/columns/cards/${cardId}`;
 
     const numProjects = projects?.length ?? 0;
 
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+
     if (numProjects === 0) {
-      console.log("No projects found!");
+      console.log("\r\nNo projects found!");
       return;
     }
-    console.group("Available Projects:");
+    console.group("\r\nAvailable Projects:");
     projects.forEach((project, index) =>
       console.log(`[${index}] ${project.name}: ${project.html_url}`)
     );
+    console.log();
     console.groupEnd();
 
     const projectToLookup =
@@ -109,6 +115,9 @@ const API_CARD_URL = (cardId) => `${API_URL}/projects/columns/cards/${cardId}`;
               })
             ).projectToLookup
       ];
+
+    process.stdout.write("Getting cards...");
+
     const projectId = projectToLookup.id;
 
     const columns = (
@@ -139,6 +148,9 @@ const API_CARD_URL = (cardId) => `${API_URL}/projects/columns/cards/${cardId}`;
       }
     }
 
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+
     const { outputFilename } = await prompt.get({
       name: "outputFilename",
       default: "output/export.csv",
@@ -146,6 +158,8 @@ const API_CARD_URL = (cardId) => `${API_URL}/projects/columns/cards/${cardId}`;
       type: "string",
       required: true,
     });
+
+    process.stdout.write("Writing to csv...");
 
     // https://www.papaparse.com/docs#json-to-csv
     const outputCSV = Papa.unparse(exportData, {
@@ -160,10 +174,15 @@ const API_CARD_URL = (cardId) => `${API_URL}/projects/columns/cards/${cardId}`;
       columns: null,
     });
 
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+    console.log();
+
     fs.writeFile(outputFilename, outputCSV, "utf8", () => {
       console.group(`Printed output to ${outputFilename}`);
       console.log(outputCSV);
       console.groupEnd();
+      console.log();
     });
   } catch (err) {
     console.error(err);
