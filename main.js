@@ -2,21 +2,9 @@ const { default: axios } = require("axios");
 const prompt = require("prompt");
 const Papa = require("papaparse");
 const fs = require("fs");
-
 require("dotenv").config();
 
-const API_URL = "https://api.github.com";
-const API_REPO_PROJECTS_URL = (owner, repo) =>
-  `${API_URL}/repos/${owner}/${repo}/projects`;
-const API_USER_OWNER_PROJECTS_URL = (orgOwner) =>
-  `${API_URL}/users/${orgOwner}/projects`;
-const API_ORG_OWNER_PROJECTS_URL = (userOwner) =>
-  `${API_URL}/orgs/${userOwner}/projects`;
-const API_PROJECT_COLUMNS_URL = (projectId) =>
-  `${API_URL}/projects/${projectId}/columns`;
-const API_COLUMN_CARDS_URL = (columnId) =>
-  `${API_URL}/projects/columns/${columnId}/cards`;
-const API_CARD_URL = (cardId) => `${API_URL}/projects/columns/cards/${cardId}`;
+const { GitHubQuery } = require("./github");
 
 (async () => {
   try {
@@ -64,25 +52,11 @@ const API_CARD_URL = (cardId) => `${API_URL}/projects/columns/cards/${cardId}`;
           ).ownerIsUser
         : true;
 
-    const headers = {
-      Accept: "application/vnd.github.inertia-preview+json",
-      Authorization: `token ${token}`,
-    };
-
-    const projectsEndpoint = repo.length
-      ? API_REPO_PROJECTS_URL(owner, repo)
-      : isOwnerUser
-      ? API_USER_OWNER_PROJECTS_URL(owner)
-      : API_ORG_OWNER_PROJECTS_URL(owner);
+    const GitHub = new GitHubQuery({ owner, repo, token, isOwnerUser });
 
     process.stdout.write("Getting projects...");
 
-    const projects = (
-      await axios.get(projectsEndpoint, {
-        headers,
-      })
-    ).data;
-
+    const projects = await GitHub.getProjects();
     const numProjects = projects?.length ?? 0;
 
     process.stdout.clearLine();
@@ -120,27 +94,14 @@ const API_CARD_URL = (cardId) => `${API_URL}/projects/columns/cards/${cardId}`;
 
     const projectId = projectToLookup.id;
 
-    const columns = (
-      await axios.get(API_PROJECT_COLUMNS_URL(projectId), {
-        headers,
-      })
-    ).data;
+    const columns = await GitHub.getProjectColumns(projectId);
 
     const exportData = [];
 
     for (column of columns) {
-      const cards = (
-        await axios.get(API_COLUMN_CARDS_URL(column.id), {
-          headers,
-        })
-      ).data;
+      const cards = await GitHub.getColumnCards(column.id);
       for (card of cards) {
-        const cardResponse = (
-          await axios.get(API_CARD_URL(card.id), {
-            headers,
-          })
-        ).data;
-
+        const cardResponse = await GitHub.getCard(card.id);
         exportData.push({
           column: column.name,
           note: cardResponse.content_url ?? cardResponse.note,
