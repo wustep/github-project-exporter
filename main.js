@@ -1,7 +1,7 @@
 const { default: axios } = require("axios");
 const prompt = require("prompt");
 const Papa = require("papaparse");
-const fs = require("fs");
+const fs = require("fs-extra");
 require("dotenv").config();
 
 const { GitHubQuery } = require("./github");
@@ -194,7 +194,10 @@ const { GitHubQuery } = require("./github");
     process.stdout.cursorTo(0);
     console.log();
 
-    fs.writeFile(outputFilename, outputCSV, "utf8", () => {
+    fs.outputFile(outputFilename, outputCSV, {encoding: "utf8"}, (err) => {
+      if (err) {
+        throw(err);
+      }
       console.group(`Printed output to ${outputFilename}`);
       columns.forEach((column) =>
         console.log(`${column.name}: ${column.numCards}`)
