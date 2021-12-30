@@ -34,7 +34,16 @@ class GitHubQuery {
   };
 
   getColumnCards = async (columnId) => {
-    return await this.get(`projects/columns/${columnId}/cards`);
+    let result = [];
+    let page = 1;
+    let limit = 100;
+    do {
+      const res = await this.get(`projects/columns/${columnId}/cards?per_page=${limit}&page=${page}`);
+      result = [...result, ...res]
+      page++;
+    } while (result.length >= limit * (page - 1));
+
+    return result;
   };
 }
 
