@@ -88,6 +88,31 @@ const { GitHubQuery } = require("./github");
     const projectId = projects[projectIndex].id;
     const columns = await GitHub.getProjectColumns(projectId);
 
+      let columnsToInclude = [];
+      for (column of columns) {
+          if ( (await prompt.get({
+              name: "shouldInclude",
+              description: `Export ${column.name} (y/n)?`,
+              before: (v) => {
+                  return v[0].toLowerCase() === "y";
+              },
+              default: "y",
+              pattern: /(y|yes|n|no)$/,
+              type: "string",
+              required: true,
+          })).shouldInclude ) {
+              columnsToInclude.push(column);
+          }
+      }
+
+    const { outputFilename } = await prompt.get({
+      name: "outputFilename",
+      default: "output/export.csv",
+      description: "What file name to export to?",
+      type: "string",
+      required: true,
+    });
+
     const exportData = [];
 
     /**
@@ -99,7 +124,7 @@ const { GitHubQuery } = require("./github");
     let addedCardHeaders = false;
     let addedIssueHeaders = false;
 
-    for (column of columns) {
+    for (column of columnsToInclude) {
       const cards = await GitHub.getColumnCards(column.id);
       column.numCards = cards.length;
       for (card of cards) {
@@ -166,14 +191,6 @@ const { GitHubQuery } = require("./github");
     process.stdout.clearLine();
     process.stdout.cursorTo(0);
 
-    const { outputFilename } = await prompt.get({
-      name: "outputFilename",
-      default: "output/export.csv",
-      description: "What file name to export to?",
-      type: "string",
-      required: true,
-    });
-
     process.stdout.write("Writing to csv...");
 
     const outputCSV = Papa.unparse(exportData, {
@@ -199,7 +216,7 @@ const { GitHubQuery } = require("./github");
         throw(err);
       }
       console.group(`Printed output to ${outputFilename}`);
-      columns.forEach((column) =>
+      columnsToInclude.forEach((column) =>
         console.log(`${column.name}: ${column.numCards}`)
       );
       console.groupEnd();
