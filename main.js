@@ -116,6 +116,7 @@ const { GitHubQuery } = require("./github");
           });
           title = issue.title;
           issueFields = {
+            issue_number: issue.number,
             issue_state: issue.state,
             issue_labels: issue.labels.length
               ? issue.labels.reduce((labelString, label) => {
@@ -194,9 +195,9 @@ const { GitHubQuery } = require("./github");
     process.stdout.cursorTo(0);
     console.log();
 
-    fs.outputFile(outputFilename, outputCSV, {encoding: "utf8"}, (err) => {
+    fs.outputFile(outputFilename, outputCSV, { encoding: "utf8" }, (err) => {
       if (err) {
-        throw(err);
+        throw err;
       }
       console.group(`Printed output to ${outputFilename}`);
       columns.forEach((column) =>
