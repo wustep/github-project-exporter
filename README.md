@@ -2,7 +2,7 @@
 
 Export GitHub Project cards into CSV files for Notion or other apps!
 
-I noticed there wasn't an easy way to export GitHub projects to other apps -- so I started building one!
+This project is for the V1 GitHub Project API. [For V2 Project exports, see this project!](https://justinmahar.github.io/github-projectv2-csv-exporter/?path=/story/home--page)
 
 ## What this does
 
